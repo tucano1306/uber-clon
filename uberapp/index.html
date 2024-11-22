@@ -1,0 +1,258 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academlo-RideShare - Uber Clone</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Leaflet Locate CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Tu CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet Locate JS (después de Leaflet) -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
+</head>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="app-logo">
+                <i class="fas fa-car"></i> Academlo-RideShare 
+            </div>
+            
+            <div class="booking-type-selector">
+                <div class="booking-type active" onclick="switchBookingType('now')">
+                    <i class="fas fa-bolt"></i> Ahora
+                </div>
+                <div class="booking-type" onclick="switchBookingType('schedule')">
+                    <i class="far fa-clock"></i> Reservar
+                </div>
+            </div>
+
+            <div class="schedule-options" id="schedule-options">
+                <div class="input-group">
+                    <i class="far fa-calendar"></i>
+                    <input type="date" class="schedule-input" id="schedule-date">
+                </div>
+                <div class="input-group">
+                    <i class="far fa-clock"></i>
+                    <input type="time" class="schedule-input" id="schedule-time">
+                </div>
+            </div>
+
+            <div class="location-input">
+                <div class="input-group">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" placeholder="¿Dónde te recogemos?" id="pickup-location">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-flag-checkered"></i>
+                    <input type="text" placeholder="¿A dónde vas?" id="destination-location">
+                </div>
+            </div>
+
+            <div class="ride-options">
+                <div class="ride-option" onclick="selectRideOption(1)">
+                    <div class="ride-option-icon">
+                        <i class="fas fa-car-side"></i>
+                    </div>
+                    <div class="ride-option-details">
+                        <h3>Comfort</h3>
+                        <p>Viaje cómodo y espacioso</p>
+                        <div class="ride-option-price">$15.00</div>
+                    </div>
+                </div>
+
+                <div class="ride-option" onclick="selectRideOption(2)">
+                    <div class="ride-option-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="ride-option-details">
+                        <h3>UberX</h3>
+                        <p>La opción más económica</p>
+                        <div class="ride-option-price">$10.00</div>
+                    </div>
+                </div>
+
+                <div class="ride-option" onclick="selectRideOption(3)">
+                    <div class="ride-option-icon">
+                        <i class="fas fa-car-alt"></i>
+                    </div>
+                    <div class="ride-option-details">
+                        <h3>Black</h3>
+                        <p>Viaje premium</p>
+                        <div class="ride-option-price">$25.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="request-button" onclick="handleRideRequest()" disabled>
+                <i class="fas fa-chevron-right"></i> Solicitar viaje
+            </button>
+
+            <div class="scheduled-rides" id="scheduled-rides">
+                <h3>Viajes Programados</h3>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+    <div class="modal" id="confirmation-modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-check-circle"></i> Confirmar Reserva</h2>
+            <div id="confirmation-details" class="confirmation-details"></div>
+            <button onclick="confirmScheduledRide()" class="request-button">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+            <button onclick="closeModal()" class="cancel-ride-btn" style="width: 100%; margin-top: 10px;">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="driver-modal" id="driver-modal">
+        <div class="modal-content">
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-photo">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Driver Photo">
+                    </div>
+                    <div class="driver-info">
+                        <h3>Tu conductor está en camino</h3>
+                        <div class="driver-rating">
+                            <i class="fas fa-star"></i>
+                            <span>4.8</span> · 2,345 viajes
+                        </div>
+                    </div>
+                </div>
+                <div class="driver-details">
+                    <div class="car-info">
+                        <i class="fas fa-car"></i>
+                        <div>
+                            <h4>Toyota Corolla 2020</h4>
+                            <p>ABC-123</p>
+                        </div>
+                    </div>
+                    <div class="eta">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h4>Tiempo estimado</h4>
+                            <p id="eta-time">3 min</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="driver-actions">
+                    <button class="action-button">
+                        <i class="fas fa-phone"></i> Llamar
+                    </button>
+                    <button class="action-button">
+                        <i class="fas fa-comment"></i> Mensaje
+                    </button>
+                    <button class="action-button cancel-ride-btn" onclick="cancelCurrentRide()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agregar esto justo antes del cierre del body -->
+<div class="call-modal" id="call-modal">
+    <div class="modal-content">
+        <div class="call-screen">
+            <div class="call-info">
+                <div class="driver-photo">
+                    <img id="calling-driver-photo" src="" alt="Driver Photo">
+                </div>
+                <h3 id="calling-driver-name"></h3>
+                <p class="call-status">Llamando...</p>
+                <div class="call-duration" id="call-duration">00:00</div>
+            </div>
+            <div class="call-actions">
+                <button class="call-action-btn mute">
+                    <i class="fas fa-microphone-slash"></i>
+                </button>
+                <button class="call-action-btn speaker">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button class="call-action-btn end-call" onclick="endCall()">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chat-modal" id="chat-modal">
+    <div class="modal-content">
+        <div class="chat-header">
+            <div class="chat-driver-info">
+                <img id="chat-driver-photo" src="" alt="Driver Photo">
+                <div>
+                    <h3 id="chat-driver-name"></h3>
+                    <p class="driver-status">En línea</p>
+                </div>
+            </div>
+            <button class="close-chat" onclick="closeChat()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Los mensajes se agregarán dinámicamente -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Escribe un mensaje...">
+            <button onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="driver-modal" id="driver-modal">
+    <div class="modal-content">
+        <div class="driver-card">
+            <div class="driver-info">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Driver">
+                <div class="driver-details">
+                    <h3>Carlos Rodríguez</h3>
+                    <div class="rating">⭐ 4.8</div>
+                    <div class="car-info">Toyota Corolla - ABC123</div>
+                </div>
+            </div>
+            <div class="driver-actions">
+                <button onclick="contactDriver('call')">
+                    <i class="fas fa-phone"></i> Llamar
+                </button>
+                <button onclick="contactDriver('message')">
+                    <i class="fas fa-comment"></i> Mensaje
+                </button>
+                <button class="cancel" onclick="cancelRide()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="current-ride" id="current-ride">
+    <h3>Viaje en Curso</h3>
+    <div class="ride-details"></div>
+</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
